@@ -2,4 +2,4 @@
 *.o
 cub_3d
 .vscode/
-.DS_Store
+cub3D

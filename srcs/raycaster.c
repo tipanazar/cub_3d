@@ -1,38 +1,32 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
+/*   raycaster.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/29 12:59:47 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 12:59:49 by nkarpeko         ###   ########.fr       */
+/*   Created: 2025/01/29 13:01:01 by nkarpeko          #+#    #+#             */
+/*   Updated: 2025/01/29 13:01:03 by nkarpeko         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-int main(int ac, char **av)
+void raycaster_loop(t_map *map)
 {
-	t_map map;
-	t_player player;
-	t_data data;
-	t_window window;
-	t_rcst rcst;
+	int i;
 
-	map.player = &player;
-	map.data = &data;
-	map.window = &window;
-	map.rcst = &rcst;
-	if (ac == 2)
+	i = 0;
+	while (i < WINDOW_WIDTH)
 	{
-		init(&map);
-		open_and_init_map(av[1], &map);
-		map_validation(&map, &player);
-		game_start(&map);
-		free_map(&map);
+		init_raycaster_data(map, i);
+		calculate_step_and_side_distances(map);
+		perform_dda_algorithm(map);
+		calculate_wall_distance_and_line_height(map);
+		calculate_draw_start_end_and_wall_x(map);
+		handle_ray_direction(map, i);
+		i++;
 	}
-	else
-		printf("Error: Invalid number of arguments\n");
-	return (0);
+	mlx_put_image_to_window(map->window->mlx_ptr, map->window->win_ptr,
+							map->data->img, 0, 0);
 }
