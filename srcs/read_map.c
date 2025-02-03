@@ -3,114 +3,129 @@
 /*                                                        :::      ::::::::   */
 /*   read_map.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: azhadan <azhadan@student.42lisboa.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/29 13:01:06 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 13:01:07 by nkarpeko         ###   ########.fr       */
+/*   Updated: 2025/02/03 02:19:00 by azhadan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-char *save_the_line(char *line, char *to_find)
+char *extract_identifier_value(char *source_line, char *identifier)
 {
-	char *original_line;
-	int to_find_len;
+	char *line_start;
+	int identifier_length;
 
-	if (!line || !to_find)
+	if (!source_line || !identifier)
 		return (NULL);
-	original_line = line;
-	to_find_len = ft_strlen(to_find);
-	while (*line && ft_isspace(*line))
-		line++;
-	if (line == original_line && ft_strncmp(line, to_find, to_find_len) == 0 && (line[to_find_len] == '\0' || ft_isspace(line[to_find_len])))
+	line_start = source_line;
+	identifier_length = ft_strlen(identifier);
+
+	// Skip leading whitespace
+	while (*source_line && ft_isspace(*source_line))
+		source_line++;
+
+	// Check if line starts with identifier
+	if (source_line == line_start && 
+		ft_strncmp(source_line, identifier, identifier_length) == 0 && 
+		(source_line[identifier_length] == '\0' || 
+		 ft_isspace(source_line[identifier_length])))
 	{
-		line += ft_strlen(to_find);
-		while (*line && ft_isspace(*line))
-			line++;
-		if (line[ft_strlen(line) - 1] == '\n')
-			line[ft_strlen(line) - 1] = '\0';
-		return (line);
+		source_line += ft_strlen(identifier);
+		while (*source_line && ft_isspace(*source_line))
+			source_line++;
+		if (source_line[ft_strlen(source_line) - 1] == '\n')
+			source_line[ft_strlen(source_line) - 1] = '\0';
+		return (source_line);
 	}
 	return (NULL);
 }
 
-void process_line(t_map *map, char **holder_map, char *line)
+void process_map_line(t_map *map, char **map_buffer, char *line)
 {
-	char *temp;
+	char *temp_buffer;
 
 	if (map->ceiling_color != NULL && !is_blank(line))
 	{
-		temp = *holder_map;
-		*holder_map = ft_strjoin(temp, line);
-		free(temp);
+		temp_buffer = *map_buffer;
+		*map_buffer = ft_strjoin(temp_buffer, line);
+		free(temp_buffer);
 	}
-	map_init(line, map);
+	initialize_map_config(line, map);
 	free(line);
 }
 
-void process_map_lines(int fd, t_map *map)
+void read_and_process_map(int file_descriptor, t_map *map)
 {
-	char *line;
-	char *holder_map;
+	char *current_line;
+	char *map_buffer;
 
-	line = get_next_line(fd);
-	holder_map = ft_strdup("");
-	while (line != NULL)
+	current_line = get_next_line(file_descriptor);
+	map_buffer = ft_strdup("");
+	while (current_line != NULL)
 	{
-		process_line(map, &holder_map, line);
-		line = get_next_line(fd);
+		process_map_line(map, &map_buffer, current_line);
+		current_line = get_next_line(file_descriptor);
 	}
-	check_textures_and_colors(map, holder_map);
-	if (*holder_map != '\0')
-		map->map = ft_split(holder_map, '\n');
+	validate_map_elements(map, map_buffer);
+
+	if (*map_buffer != '\0')
+		map->map = ft_split(map_buffer, '\n');
 	else
 	{
-		free(holder_map);
-		err("Empty map", map);
+		free(map_buffer);
+		handle_error("Empty map", map);
 	}
-	free(holder_map);
-	close(fd);
+	free(map_buffer);
+	close(file_descriptor);
 }
 
-void process_map_symbol(t_map *map, t_player *player, int i, int j)
+void validate_map_character(t_map *map, t_player *player, int row, int col)
 {
-	if (map->map[i][j] == '1' || map->map[i][j] == ' ' || map->map[i][j] == '0')
-	{
-	}
-	else if (map->map[i][j] == 'N' || map->map[i][j] == 'S' || map->map[i][j] == 'W' || map->map[i][j] == 'E')
+	char current_char;
+
+	current_char = map->map[row][col];
+	if (current_char == '1' || current_char == ' ' || current_char == '0')
+		return;
+	else if (current_char == 'N' || current_char == 'S' || 
+			 current_char == 'W' || current_char == 'E')
 	{
 		if (player->p_direction != '\0')
-			err("Player was already defined", map);
-		player->x = j + 0.5;
-		player->y = i + 0.5;
-		player->p_direction = map->map[i][j];
+			handle_error("Player was already defined", map);
+		player->x = col + 0.5;
+		player->y = row + 0.5;
+		player->p_direction = current_char;
 	}
 	else
-		err("Invalid map", map);
+		handle_error("Invalid map", map);
 }
 
-void map_validation(t_map *map, t_player *player)
+void validate_map_structure(t_map *map, t_player *player)
 {
-	int i;
-	int j;
+	int row;
+	int col;
 
-	i = 0;
+	row = 0;
 	player->p_direction = '\0';
-	while (map->map[i])
+	while (map->map[row])
 	{
-		j = 0;
-		while (map->map[i][j])
+		col = 0;
+		while (map->map[row][col])
 		{
-			process_map_symbol(map, player, i, j);
-			j++;
+			validate_map_character(map, player, row, col);
+			col++;
 		}
-		i++;
+		row++;
 	}
+
+	// Validate map requirements
 	if (player->p_direction == '\0')
-		err("Player was not defined", map);
-	if (!is_map_closed(map->map))
-		err("Map is not closed", map);
-	map->ceiling_color_int = get_the_color(map->ceiling_color, map);
-	map->floor_color_int = get_the_color(map->floor_color, map);
+		handle_error("Player was not defined", map);
+	if (!validate_map_closure(map->map))
+		handle_error("Map is not closed", map);
+
+	// Parse color values
+	map->ceiling_color_int = parse_rgb_color(map->ceiling_color, map);
+	map->floor_color_int = parse_rgb_color(map->floor_color, map);
 }

@@ -3,69 +3,83 @@
 /*                                                        :::      ::::::::   */
 /*   check_map.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: azhadan <azhadan@student.42lisboa.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/29 12:59:09 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 12:59:12 by nkarpeko         ###   ########.fr       */
+/*   Updated: 2025/02/03 02:19:00 by azhadan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-void check_path(char *file, t_map *map)
+void validate_file_extension(char *filename, t_map *map)
 {
-	char **splitted_path;
-	int arr_idx;
+	char **extension_parts;
+	int part_count;
 
-	splitted_path = ft_split(file, '.');
-	arr_idx = 0;
-	while (splitted_path[arr_idx])
-		arr_idx++;
-	if (ft_strncmp(splitted_path[arr_idx - 1], "cub", 4))
+	extension_parts = ft_split(filename, '.');
+	part_count = 0;
+	while (extension_parts[part_count])
+		part_count++;
+	if (ft_strncmp(extension_parts[part_count - 1], "cub", 4))
 	{
-		ft_free_char_arr(splitted_path);
-		err("Map file is not .cub", map);
+		ft_free_char_arr(extension_parts);
+		handle_error("Map file is not .cub", map);
 	}
-	ft_free_char_arr(splitted_path);
+	ft_free_char_arr(extension_parts);
 }
 
-void check_textures_and_colors(t_map *map, char *holder_map)
+void validate_map_elements(t_map *map, char *raw_map_data)
 {
-	if (map->no_texture == NULL || map->so_texture == NULL || map->we_texture == NULL || map->ea_texture == NULL)
+	if (!map->no_texture || !map->so_texture || 
+		!map->we_texture || !map->ea_texture)
 	{
-		free(holder_map);
-		err("Texture is not defined", map);
+		free(raw_map_data);
+		handle_error("Texture is not defined", map);
 	}
-	if (map->floor_color == NULL || map->ceiling_color == NULL)
+	if (!map->floor_color || !map->ceiling_color)
 	{
-		free(holder_map);
-		err("Color is not defined", map);
+		free(raw_map_data);
+		handle_error("Color is not defined", map);
 	}
 }
 
-bool is_cell_closed(char **map, int i, int j)
+bool validate_cell_boundaries(char **grid, int row, int col)
 {
-	if (i == 0 || j == 0 || !map[i + 1] || !map[i][j + 1] || map[i - 1][j] == ' ' || map[i][j - 1] == ' ' || map[i + 1][j] == ' ' || map[i][j + 1] == ' ' || map[i - 1][j - 1] == ' ' || map[i + 1][j + 1] == ' ' || map[i - 1][j + 1] == ' ' || map[i + 1][j - 1] == ' ' || map[i - 1][j] == '\0' || map[i][j - 1] == '\0' || map[i + 1][j] == '\0' || map[i][j + 1] == '\0' || map[i - 1][j - 1] == '\0' || map[i + 1][j + 1] == '\0' || map[i - 1][j + 1] == '\0' || map[i + 1][j - 1] == '\0')
-		return (false);
-	return (true);
+	bool is_border = (row == 0 || col == 0 || !grid[row + 1] || !grid[row][col + 1]);
+	bool has_adjacent_space = (grid[row - 1][col] == ' ' || grid[row][col - 1] == ' ' ||
+							 grid[row + 1][col] == ' ' || grid[row][col + 1] == ' ');
+	bool has_diagonal_space = (grid[row - 1][col - 1] == ' ' || grid[row + 1][col + 1] == ' ' ||
+							 grid[row - 1][col + 1] == ' ' || grid[row + 1][col - 1] == ' ');
+	bool has_null_adjacent = (grid[row - 1][col] == '\0' || grid[row][col - 1] == '\0' ||
+							grid[row + 1][col] == '\0' || grid[row][col + 1] == '\0');
+	bool has_null_diagonal = (grid[row - 1][col - 1] == '\0' || grid[row + 1][col + 1] == '\0' ||
+							grid[row - 1][col + 1] == '\0' || grid[row + 1][col - 1] == '\0');
+
+	return !(is_border || has_adjacent_space || has_diagonal_space || 
+			 has_null_adjacent || has_null_diagonal);
 }
 
-bool is_map_closed(char **map)
+bool validate_map_closure(char **grid)
 {
-	int i;
-	int j;
+	int row;
+	int col;
+	char current_cell;
 
-	i = 0;
-	while (map[i])
+	row = 0;
+	while (grid[row])
 	{
-		j = 0;
-		while (map[i][j])
+		col = 0;
+		while (grid[row][col])
 		{
-			if ((map[i][j] == '0' || map[i][j] == 'N' || map[i][j] == 'S' || map[i][j] == 'W' || map[i][j] == 'E') && !is_cell_closed(map, i, j))
+			current_cell = grid[row][col];
+			if ((current_cell == '0' || current_cell == 'N' || 
+				 current_cell == 'S' || current_cell == 'W' || 
+				 current_cell == 'E') && !validate_cell_boundaries(grid, row, col))
 				return (false);
-			j++;
+			col++;
 		}
-		i++;
+		row++;
 	}
 	return (true);
 }

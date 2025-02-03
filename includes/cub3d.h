@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cub3d.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: azhadan <azhadan@student.42lisboa.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/29 12:58:49 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 14:54:34 by nkarpeko         ###   ########.fr       */
+/*   Updated: 2025/02/03 02:18:25 by azhadan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -138,115 +138,114 @@ typedef struct s_map
 
 /*check_map.c*/
 
-void check_path(char *file, t_map *map);
-void check_textures_and_colors(t_map *map, char *holder_map);
-bool is_cell_closed(char **map, int i, int j);
-bool is_map_closed(char **map);
+void validate_file_extension(char *file, t_map *map);
+void validate_map_elements(t_map *map, char *holder_map);
+bool validate_cell_boundaries(char **map, int i, int j);
+bool validate_map_closure(char **map);
 
 /*/check_map.c*/
 
 /*close_and_free.c*/
 
-void ft_clear_all(t_map *map);
-int ft_close_win(t_map *map);
-void free_textures_and_colors(t_map *map);
-void free_map_and_images(t_map *map);
-void free_map(t_map *map);
+void cleanup_resources(t_map *map);
+int handle_window_close(t_map *map);
+void release_texture_paths(t_map *map);
+void cleanup_map_and_textures(t_map *map);
+void release_map_memory(t_map *map);
 
 /*/close_and_free.c*/
 
 /*drawing_utils.c*/
 
-int validate_and_parse_number(char **str);
-int get_the_color(char *str, t_map *map);
-void clear_screen(t_map *map);
+int parse_color_component(char **color_str);
+int parse_rgb_color(char *color_str, t_map *map);
+void render_background(t_map *map);
 
 /*/drawing_utils.c*/
 
 /*init_map.c*/
 
-void map_init(char *str, t_map *map);
-void set_texture(char **texture, char *saved_line, t_map *map);
-void init_map_data(t_map *map);
-void open_and_init_map(char *file, t_map *map);
-void init(t_map *map);
+void initialize_map_config(char *config_str, t_map *map);
+void assign_texture(char **texture_ptr, char *texture_data, t_map *map);
+void initialize_map_pointers(t_map *map);
+void setup_map_from_file(char *filename, t_map *map);
+void initialize_game_state(t_map *map);
 
 /*/init_map.c*/
 
 /*key_and_moving.c*/
 
-int key_press_hook(int keycode, t_map *map);
-int key_release_hook(int keycode, t_map *map);
-void init_player_speed(t_map *map);
-void moving_forward(t_map *map);
-void moving_backward(t_map *map);
+int handle_keypress(int keycode, t_map *map);
+int handle_keyrelease(int keycode, t_map *map);
+void initialize_player_movement(t_map *map);
+void handle_forward_movement(t_map *map);
+void handle_backward_movement(t_map *map);
 
 /*/key_and_moving.c*/
 
 /*moving.c*/
 
-void moving_left(t_map *map);
-void moving_right(t_map *map);
-void rotating_left(t_map *map);
-void rotating_right(t_map *map);
-void update_player(t_map *map);
+void handle_strafe_left(t_map *map);
+void handle_strafe_right(t_map *map);
+void handle_rotation_left(t_map *map);
+void handle_rotation_right(t_map *map);
+void update_player_state(t_map *map);
 
 /*/moving.c*/
 
 /*raycaster_calculations.c*/
 
-void init_raycaster_data(t_map *map, int i);
-void calculate_step_and_side_distances(t_map *map);
-void perform_dda_algorithm(t_map *map);
-void calculate_wall_distance_and_line_height(t_map *map);
-void calculate_draw_start_end_and_wall_x(t_map *map);
+void initialize_ray_parameters(t_map *map, int ray_index);
+void compute_ray_step_distances(t_map *map);
+void execute_dda_raycast(t_map *map);
+void calculate_projection_dimensions(t_map *map);
+void compute_wall_texture_coordinates(t_map *map);
 
 /*/raycaster_calculations.c*/
 
 /*raycaster_ray_dir.c*/
 
-void handle_ray_dir_x_positive(t_map *map, int i);
-void handle_ray_dir_x_negative(t_map *map, int i);
-void handle_ray_dir_y_positive(t_map *map, int i);
-void handle_ray_dir_y_negative(t_map *map, int i);
-void handle_ray_direction(t_map *map, int i);
+void render_west_facing_wall(t_map *map, int screen_x);
+void render_east_facing_wall(t_map *map, int screen_x);
+void render_north_facing_wall(t_map *map, int screen_x);
+void render_south_facing_wall(t_map *map, int screen_x);
+void render_wall_texture(t_map *map, int screen_x);
 
 /*/raycaster_ray_dir.c*/
 
 /*raycaster.c*/
 
-void raycaster_loop(t_map *map);
+void render_frame(t_map *map);
 
 /*/raycaster.c*/
 
 /*start_game.c*/
 
-int game_loop(t_map *map);
-void set_player_direction(t_player *player, int pdx, int pdy);
-void set_player_plane(t_player *player, double plane_x,
-					  double plane_y);
-void initialize_player_direction(t_player *player);
-void game_start(t_map *map);
+int update_game_state(t_map *map);
+void initialize_player_vectors(t_player *player, int direction_x, int direction_y);
+void initialize_camera_plane(t_player *player, double plane_x, double plane_y);
+void setup_player_orientation(t_player *player);
+void initialize_game_window(t_map *map);
 
 /*/start_game.c*/
 
 /*read_map.c*/
 
-char *save_the_line(char *line, char *to_find);
-void process_line(t_map *map, char **holder_map, char *line);
-void process_map_lines(int fd, t_map *map);
-void process_map_symbol(t_map *map, t_player *player, int i, int j);
-void map_validation(t_map *map, t_player *player);
+char *extract_identifier_value(char *source_line, char *identifier);
+void process_map_line(t_map *map, char **map_buffer, char *line);
+void read_and_process_map(int file_descriptor, t_map *map);
+void validate_map_character(t_map *map, t_player *player, int row, int col);
+void validate_map_structure(t_map *map, t_player *player);
 
 /*/read_map.c*/
 
 /*utils.c*/
 
-void err(char *str, t_map *map);
-void my_mlx_pixel_put(t_data *data, int x, int y, int color);
-t_data create_img(char *path, t_map *map);
-int get_pixel(t_data *img, int x, int y);
-void load_textures(t_map *map);
+void handle_error(char *error_message, t_map *map);
+void draw_pixel(t_data *buffer, int pos_x, int pos_y, int color);
+t_data load_texture_image(char *texture_path, t_map *map);
+int get_texture_pixel(t_data *texture, int tex_x, int tex_y);
+void initialize_textures(t_map *map);
 
 /*/utils.c*/
 

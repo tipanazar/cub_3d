@@ -3,73 +3,73 @@
 /*                                                        :::      ::::::::   */
 /*   drawing_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: azhadan <azhadan@student.42lisboa.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/29 12:59:31 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 12:59:33 by nkarpeko         ###   ########.fr       */
+/*   Updated: 2025/02/03 02:19:17 by azhadan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-int validate_and_parse_number(char **str)
+int parse_color_component(char **color_str)
 {
-	int value;
+	int component_value;
 
-	if (!ft_isdigit(**str))
+	if (!ft_isdigit(**color_str))
 		return (-1);
-	value = ft_atoi(*str);
-	while (ft_isdigit(**str))
-		(*str)++;
-	if (value < 0 || value > 255)
+	component_value = ft_atoi(*color_str);
+	while (ft_isdigit(**color_str))
+		(*color_str)++;
+	if (component_value < 0 || component_value > 255)
 		return (-1);
-	return (value);
+	return (component_value);
 }
 
-int get_the_color(char *str, t_map *map)
+int parse_rgb_color(char *color_str, t_map *map)
 {
-	int color;
-	int r;
-	int g;
-	int b;
+	int rgb_value;
+	int red;
+	int green;
+	int blue;
 
-	while (*str == ' ')
-		str++;
-	r = validate_and_parse_number(&str);
-	if (*str != ',')
-		err("Color should be R,G,B\n", map);
-	str++;
-	g = validate_and_parse_number(&str);
-	if (*str != ',')
-		err("Color should be R,G,B\n", map);
-	str++;
-	b = validate_and_parse_number(&str);
-	while (*str == ' ')
-		str++;
-	if (*str != '\0' || r == -1 || g == -1 || b == -1)
-		err("Color should be R,G,B\n", map);
-	color = (r << 16 | g << 8 | b);
-	return (color);
+	while (*color_str == ' ')
+		color_str++;
+	red = parse_color_component(&color_str);
+	if (*color_str != ',')
+		handle_error("Color should be R,G,B\n", map);
+	color_str++;
+	green = parse_color_component(&color_str);
+	if (*color_str != ',')
+		handle_error("Color should be R,G,B\n", map);
+	color_str++;
+	blue = parse_color_component(&color_str);
+	while (*color_str == ' ')
+		color_str++;
+	if (*color_str != '\0' || red == -1 || green == -1 || blue == -1)
+		handle_error("Color should be R,G,B\n", map);
+	rgb_value = (red << 16 | green << 8 | blue);
+	return (rgb_value);
 }
 
-void clear_screen(t_map *map)
+void render_background(t_map *map)
 {
-	int x;
-	int y;
+	int width;
+	int height;
 
-	y = 0;
-	while (y < WINDOW_HEIGHT)
+	height = 0;
+	while (height < WINDOW_HEIGHT)
 	{
-		x = 0;
-		while (x < WINDOW_WIDTH)
+		width = 0;
+		while (width < WINDOW_WIDTH)
 		{
-			if (y < WINDOW_HEIGHT / 2)
-				my_mlx_pixel_put(map->data, x, y, map->ceiling_color_int);
+			if (height < WINDOW_HEIGHT / 2)
+				draw_pixel(map->data, width, height, map->ceiling_color_int);
 			else
-				my_mlx_pixel_put(map->data, x, y, map->floor_color_int);
-			x++;
+				draw_pixel(map->data, width, height, map->floor_color_int);
+			width++;
 		}
-		y++;
+		height++;
 	}
 	mlx_put_image_to_window(map->window->mlx_ptr, map->window->win_ptr,
 							map->data->img, 0, 0);

@@ -3,18 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   raycaster_calculations.c                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: azhadan <azhadan@student.42lisboa.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/29 12:59:59 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 13:00:01 by nkarpeko         ###   ########.fr       */
+/*   Updated: 2025/02/03 02:09:25 by azhadan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-void init_raycaster_data(t_map *map, int i)
+void initialize_ray_parameters(t_map *map, int ray_index)
 {
-	map->rcst->camera_x = 2 * i / (double)WINDOW_WIDTH - 1;
+	map->rcst->camera_x = 2 * ray_index / (double)WINDOW_WIDTH - 1;
 	map->rcst->ray_dir_x = map->player->pdx + map->player->plane_x * map->rcst->camera_x;
 	map->rcst->ray_dir_y = map->player->pdy + map->player->plane_y * map->rcst->camera_x;
 	map->rcst->map_x = (int)map->player->x;
@@ -30,7 +30,7 @@ void init_raycaster_data(t_map *map, int i)
 	map->rcst->hit = 0;
 }
 
-void calculate_step_and_side_distances(t_map *map)
+void compute_ray_step_distances(t_map *map)
 {
 	if (map->rcst->ray_dir_x < 0)
 	{
@@ -54,7 +54,7 @@ void calculate_step_and_side_distances(t_map *map)
 	}
 }
 
-void perform_dda_algorithm(t_map *map)
+void execute_dda_raycast(t_map *map)
 {
 	while (map->rcst->hit == 0)
 	{
@@ -75,7 +75,7 @@ void perform_dda_algorithm(t_map *map)
 	}
 }
 
-void calculate_wall_distance_and_line_height(t_map *map)
+void calculate_projection_dimensions(t_map *map)
 {
 	if (map->rcst->side == 0)
 		map->rcst->perp_wall_dist = map->rcst->side_dist_x - map->rcst->delta_dist_x;
@@ -84,7 +84,7 @@ void calculate_wall_distance_and_line_height(t_map *map)
 	map->rcst->line_height = (int)(WINDOW_HEIGHT / map->rcst->perp_wall_dist);
 }
 
-void calculate_draw_start_end_and_wall_x(t_map *map)
+void compute_wall_texture_coordinates(t_map *map)
 {
 	map->rcst->draw_start = (-1) * map->rcst->line_height / 2 + WINDOW_HEIGHT / 2;
 	if (map->rcst->draw_start < 0)

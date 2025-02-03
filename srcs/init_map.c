@@ -3,56 +3,56 @@
 /*                                                        :::      ::::::::   */
 /*   init_map.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: azhadan <azhadan@student.42lisboa.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/29 12:59:38 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 12:59:40 by nkarpeko         ###   ########.fr       */
+/*   Updated: 2025/02/03 02:19:00 by azhadan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "cub3d.h"
 
-void map_init(char *str, t_map *map)
+void initialize_map_config(char *config_str, t_map *map)
 {
-	char *saved_line;
-	char *directions[6];
-	char **textures[6];
-	int i;
+	char *parsed_line;
+	char *texture_identifiers[6];
+	char **texture_pointers[6];
+	int config_idx;
 
-	directions[0] = "NO";
-	directions[1] = "SO";
-	directions[2] = "WE";
-	directions[3] = "EA";
-	directions[4] = "F";
-	directions[5] = "C";
-	textures[0] = &map->no_texture;
-	textures[1] = &map->so_texture;
-	textures[2] = &map->we_texture;
-	textures[3] = &map->ea_texture;
-	textures[4] = &map->floor_color;
-	textures[5] = &map->ceiling_color;
-	i = 0;
-	while (i < 6)
+	texture_identifiers[0] = "NO";
+	texture_identifiers[1] = "SO";
+	texture_identifiers[2] = "WE";
+	texture_identifiers[3] = "EA";
+	texture_identifiers[4] = "F";
+	texture_identifiers[5] = "C";
+	texture_pointers[0] = &map->no_texture;
+	texture_pointers[1] = &map->so_texture;
+	texture_pointers[2] = &map->we_texture;
+	texture_pointers[3] = &map->ea_texture;
+	texture_pointers[4] = &map->floor_color;
+	texture_pointers[5] = &map->ceiling_color;
+	config_idx = 0;
+	while (config_idx < 6)
 	{
-		saved_line = save_the_line(str, directions[i]);
-		if (saved_line != NULL)
-			set_texture(textures[i], saved_line, map);
-		i++;
+		parsed_line = extract_identifier_value(config_str, texture_identifiers[config_idx]);
+		if (parsed_line != NULL)
+			assign_texture(texture_pointers[config_idx], parsed_line, map);
+		config_idx++;
 	}
 }
 
-void set_texture(char **texture, char *saved_line, t_map *map)
+void assign_texture(char **texture_ptr, char *texture_data, t_map *map)
 {
-	if (saved_line != NULL)
+	if (texture_data != NULL)
 	{
-		if (*texture == NULL)
-			*texture = ft_strdup(saved_line);
+		if (*texture_ptr == NULL)
+			*texture_ptr = ft_strdup(texture_data);
 		else
-			err("texture is already defined", map);
+			handle_error("texture is already defined", map);
 	}
 }
 
-void init_map_data(t_map *map)
+void initialize_map_pointers(t_map *map)
 {
 	map->no_texture = NULL;
 	map->so_texture = NULL;
@@ -63,19 +63,19 @@ void init_map_data(t_map *map)
 	map->map = NULL;
 }
 
-void open_and_init_map(char *file, t_map *map)
+void setup_map_from_file(char *filename, t_map *map)
 {
-	int fd;
+	int file_descriptor;
 
-	init_map_data(map);
-	check_path(file, map);
-	fd = open(file, O_RDONLY);
-	if (fd == -1)
-		err("Invalid file", map);
-	process_map_lines(fd, map);
+	initialize_map_pointers(map);
+	validate_file_extension(filename, map);
+	file_descriptor = open(filename, O_RDONLY);
+	if (file_descriptor == -1)
+		handle_error("Invalid file", map);
+	read_and_process_map(file_descriptor, map);
 }
 
-void init(t_map *map)
+void initialize_game_state(t_map *map)
 {
 	map->ea_texture_img.img = NULL;
 	map->we_texture_img.img = NULL;

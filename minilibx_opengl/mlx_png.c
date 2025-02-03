@@ -171,7 +171,7 @@ int	mipng_data(mlx_img_list_t *img, unsigned char *dat, png_info_t *pi)
 
   b_pos = 0;
   if (!(buffer = malloc((long long)img->width*(long long)img->height*(long long)pi->bpp + img->height)))
-    err(1, "Can't malloc");
+    handle_error(1, "Can't malloc");
   z_strm.zalloc = Z_NULL;
   z_strm.zfree = Z_NULL;
   z_strm.opaque = Z_NULL;
