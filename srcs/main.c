@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: nkarpeko <nkarpeko@student.42.fr>          +#+  +:+       +#+        */
+/*   By: azhadan <azhadan@student.42lisboa.com>     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/29 12:59:47 by nkarpeko          #+#    #+#             */
-/*   Updated: 2025/01/29 12:59:49 by nkarpeko         ###   ########.fr       */
+/*   Updated: 2025/02/03 02:17:38 by azhadan          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,11 +26,11 @@ int main(int ac, char **av)
 	map.rcst = &rcst;
 	if (ac == 2)
 	{
-		init(&map);
-		open_and_init_map(av[1], &map);
-		map_validation(&map, &player);
-		game_start(&map);
-		free_map(&map);
+		initialize_game_state(&map);
+		setup_map_from_file(av[1], &map);
+		validate_map_structure(&map, &player);
+		initialize_game_window(&map);
+		release_map_memory(&map);
 	}
 	else
 		printf("Error: Invalid number of arguments\n");
